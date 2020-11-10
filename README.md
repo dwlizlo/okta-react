@@ -104,7 +104,7 @@ This example defines 3 routes:
 // src/App.js
 
 import React, { Component } from 'react';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { SecureRoute, Security, LoginCallback } from '@okta/okta-react';
 import Home from './Home';
 import Protected from './Protected';
@@ -116,9 +116,11 @@ class App extends Component {
         <Security issuer='https://{yourOktaDomain}.com/oauth2/default'
                   clientId='{clientId}'
                   redirectUri={window.location.origin + '/implicit/callback'} >
-          <Route path='/' exact={true} component={Home}/>
-          <SecureRoute path='/protected' component={Protected}/>
-          <Route path='/implicit/callback' component={LoginCallback} />
+          <Routes>
+            <Route path='/' element={<Home />}/>
+            <SecureRoute path='/protected/*' element={<Protected />}/>
+            <Route path='/implicit/callback' element={<LoginCallback />} />
+          </Routes>
         </Security>
       </Router>
     );
@@ -143,9 +145,11 @@ const App = () => (
       clientId='{clientId}'
       redirectUri={window.location.origin + '/implicit/callback'}
     >
-      <Route path='/' exact={true} component={Home}/>
-      <SecureRoute path='/protected' component={Protected}/>
-      <Route path='/implicit/callback' component={LoginCallback} />
+      <Routes>
+        <Route path='/' element={<Home />}/>
+        <SecureRoute path='/protected/*' element={<Protected />}/>
+        <Route path='/implicit/callback' element={<LoginCallback />} />
+      </Routes>
     </Security>
   </Router>
 );
@@ -346,27 +350,31 @@ These options are used by `Security` to configure the [Auth service][]. The most
 
 #### Example
 ```jsx
-function customAuthHandler(authService) {
-  // Redirect to the /login page that has a CustomLoginComponent
-  // This example is specific to React-Router
-  this.props.history.push('/login');
-}
+import { useNavigate, Route, Routes, BrowserRouter as Router } from 'react-router-dom';
 
-class App extends Component {
-  render() {
-    return (
-        <Security issuer='https://{yourOktaDomain}.com/oauth2/default'
-                  clientId='{clientId}'
-                  redirectUri={window.location.origin + '/implicit/callback'}
-                  onAuthRequired={customAuthHandler} >
-          <Router path='/login' component={CustomLoginComponent}>
-          {/* some routes here */}
-        </Security>
-    );
+function App() {
+  const navigate = useNavigate();
+  function customAuthHandler(authService) {
+    // Redirect to the /login page that has a CustomLoginComponent
+    // This example is specific to React-Router
+    navigate('/login');
   }
+
+  return (
+    <Router>
+      <Security issuer='https://{yourOktaDomain}.com/oauth2/default'
+                clientId='{clientId}'
+                redirectUri={window.location.origin + '/implicit/callback'}
+                onAuthRequired={customAuthHandler} >
+        <Routes>
+          <Route path='/login' element={<CustomLoginComponent />}>
+          {/* some routes here */}
+        </Routes>
+      </Security>
+    </Router>
+  );
 }
 
-export default withRouter(App);
 ```
 
 #### Alternate configuration using `AuthService` instance
@@ -383,7 +391,7 @@ Configure an instance of the [Auth service][] and pass it to the `Security` comp
 // src/App.js
 
 import React, { Component } from 'react';
-import { Router, Route } from 'react-router-dom';
+import { Router, Route, Routes } from 'react-router-dom';
 import { AuthService, Security, LoginCallback, SecureRoute } from '@okta/okta-react';
 import Home from './Home';
 import Protected from './Protected';
@@ -399,9 +407,11 @@ class App extends Component {
     return (
       <Router>
         <Security authService={authService} >
-          <Route path='/' exact={true} component={Home}/>
-          <SecureRoute path='/protected' component={Protected}/>
-          <Route path='/implicit/callback' component={LoginCallback} />
+          <Routes>
+            <Route path='/' element={<Home />}/>
+            <SecureRoute path='/protected/*' element={<Protected />}/>
+            <Route path='/implicit/callback' element={<LoginCallback />} />
+          </Routes>
         </Security>
       </Router>
     );
@@ -425,7 +435,7 @@ class App extends Component {
                   clientId='{clientId}'
                   pkce={true}
                   redirectUri={window.location.origin + '/implicit/callback'}>
-          <Router path='/login' component={CustomLoginComponent}>
+          <Route path='/login' element={<CustomLoginComponent />}>
           {/* some routes here */}
         </Security>
       </Router>
@@ -450,8 +460,10 @@ class App extends Component {
     return (
       <Router>
         <Security authService={authService} >
-          <Route path='/' exact={true} component={Home}/>
-          <Route path='/implicit/callback' component={LoginCallback} />
+          <Routes>
+            <Route path='/' element={<Home />}/>
+            <Route path='/implicit/callback' element={<LoginCallback />} />
+          </Routes>
         </Security>
       </Router>
     );
@@ -466,9 +478,8 @@ class App extends Component {
   
 `SecureRoute` integrates with `react-router`.  Other routers will need their own methods to ensure authentication using the hooks/HOC props provided by this SDK.
 
-As with `Route` from `react-router-dom`, `<SecureRoute>` can take one of:
-- a `component` prop that is passed a component
-- a `render` prop that is passed a function that returns a component.  This function will be passed any additional props that react-router injects (such as `history` or `match`)
+As with `Route` from `react-router-dom` v6, `<SecureRoute>` can take one of:
+- a `element` prop that is passed a component
 - children components
 
 ### `LoginCallback`

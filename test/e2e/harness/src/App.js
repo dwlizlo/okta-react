@@ -10,9 +10,8 @@
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
-import React, { Component } from 'react';
-import { Route, Switch } from 'react-router-dom';
-import { withRouter } from 'react-router';
+import React from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { AuthService, Security, LoginCallback, SecureRoute } from '@okta/okta-react';
 import Home from './Home';
 import Protected from './Protected';
@@ -23,40 +22,33 @@ if (!AuthService) {
   throw new Error('AuthService should be defined');
 }
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.onAuthRequired = this.onAuthRequired.bind(this);
+export default function App({ pkce, redirectUri, customLogin }) {
+  const navigate = useNavigate();
+  const { ISSUER, CLIENT_ID } = process.env;
+
+  function onAuthRequired() {
+    navigate('/login');
   }
 
-  onAuthRequired() {
-    this.props.history.push('/login');
-  }
-  
-  render() {
-    const { ISSUER, CLIENT_ID } = process.env;
-    const { pkce, redirectUri, customLogin } = this.props;
-    return (
-      <React.StrictMode>
-        <Security issuer={ISSUER}
-                  clientId={CLIENT_ID}
-                  disableHttpsCheck={true}
-                  redirectUri={redirectUri}
-                  onAuthRequired={customLogin ? this.onAuthRequired : undefined}
-                  pkce={pkce}>
-          <Switch>
-            <Route path='/login' component={CustomLogin}/>
-            <Route path='/sessionToken-login' component={SessionTokenLogin}/>
-            <SecureRoute exact path='/protected' component={Protected}/>
-            <Route path='/implicit/callback' component={LoginCallback} />
-            <Route path='/pkce/callback' component={LoginCallback} />
-            <Route path='/' component={Home}/>
-          </Switch>
-        </Security>
-        <a href="/?pkce=1">PKCE Flow</a> | <a href="/">Implicit Flow</a>
-      </React.StrictMode>
-    );
-  }
+  return (
+    <React.StrictMode>
+      <Security issuer={ISSUER}
+                clientId={CLIENT_ID}
+                disableHttpsCheck={true}
+                redirectUri={redirectUri}
+                onAuthRequired={customLogin ? onAuthRequired : undefined}
+                pkce={pkce}>
+        <Routes>
+          <Route path='/login' element={<CustomLogin />}/>
+          <Route path='/sessionToken-login' element={<SessionTokenLogin />}/>
+          <SecureRoute path='/protected' element={<Protected />}/>
+          <Route path='/implicit/callback' element={<LoginCallback />} />
+          <Route path='/pkce/callback' element={<LoginCallback />} />
+          <Route path='/*' element={<Home />}/>
+        </Routes>
+      </Security>
+      <a href="/?pkce=1">PKCE Flow</a> | <a href="/">Implicit Flow</a>
+    </React.StrictMode>
+  );
 }
 
-export default withRouter(App);

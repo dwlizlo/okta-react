@@ -12,7 +12,19 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useOktaAuth } from './OktaContext';
-import { Route, useRouteMatch } from 'react-router-dom';
+import { Route, useRouteMatch as useRouteMatchOriginal, useLocation, matchPath } from 'react-router-dom';
+
+// react-router v6 doesn't export useRouteMatch
+// Issue: https://github.com/ReactTraining/react-router/issues/7133
+// PR: https://github.com/ReactTraining/react-router/pull/7142
+const useRouteMatchPolyfill = (pattern) => {
+  const location = useLocation();
+  return React.useMemo(() => 
+    pattern.path ? matchPath(pattern, location.pathname) : null, 
+    [location, pattern]
+  );
+};
+const useRouteMatch = useRouteMatchOriginal || useRouteMatchPolyfill;
 
 const SecureRoute = ( props ) => { 
   const { authService, authState } = useOktaAuth();
