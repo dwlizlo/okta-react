@@ -1,11 +1,7 @@
 import React from 'react';
 import { mount } from 'enzyme';
-<<<<<<< HEAD
 import { act } from 'react-dom/test-utils';
-import { MemoryRouter, Route } from 'react-router-dom';
-=======
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
->>>>>>> RR v6
 import SecureRoute from '../../src/SecureRoute';
 import Security from '../../src/Security';
 
